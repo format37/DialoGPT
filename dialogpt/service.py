@@ -9,7 +9,6 @@ from transformers import (
     AutoModelForCausalLM,
 )
 
-
 app = FastAPI()
 
 
