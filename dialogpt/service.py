@@ -1,16 +1,20 @@
 
 import os
-import uvicorn
-from fastapi import FastAPI, Body
+# import uvicorn
+# from fastapi import FastAPI, Body
 from typing import Dict
+from aiohttp import web
+import json
 
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
 )
 
-app = FastAPI()
-
+# app = FastAPI()
+async def call_test(request):
+	content = "ok"
+	return web.Response(text=content,content_type="text/html")
 
 params_default = {
     'max_length': 256,
@@ -30,7 +34,6 @@ huggingface_models = [
     'Grossmend/rudialogpt3_medium_based_on_gpt2',
     #'microsoft/DialoGPT-large',
 ]
-
 
 class GPT:
 
@@ -135,13 +138,60 @@ class GPT:
 
         return {'inputs': inputs, 'outputs': outputs, 'status': True, 'msg': ''}
 
+async def call_gpt(request):
 
-@app.post("/")
+    in_text = str(await request.text()).replace('\ufeff', '')
+    print(in_text)
+
+    #inputs = payload.get('inputs', '')
+    #params = payload.get('params', {})
+    params = {
+        'max_length': 256,
+        'no_repeat_ngram_size': 3,
+        'do_sample': True,
+        'top_k': 100,
+        'top_p': 0.9,
+        'temperature': 0.6,
+        'num_return_sequences': 5,
+        'device': 0,
+        'is_always_use_length': True,
+        'length_generate': '1',
+    }
+
+    inputs = [
+        {'speaker': 0, 'text': 'Привет, как день прошел?'},
+        {'speaker': 1, 'text': 'Хорошо, а у тебя как?'},
+        {'speaker': 0, 'text': 'Нормально, посоветуй фильм посмотреть'},
+    ]
+
+    # gpt = GPT(path_model='../../../Models/RuDialoGPT')
+    gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
+    #gpt = GPT(path_model='microsoft/DialoGPT-large')
+    response = json.dumps(await gpt.get_responses(inputs=inputs, params=params))
+
+    return web.Response(text=response,content_type="text/html")
+
+
+def main():
+	app = web.Application(client_max_size=1024**3)
+	app.router.add_route('GET', '/test', call_test)
+	app.router.add_post('/gpt', call_gpt)
+
+	web.run_app(
+		app,
+		port=os.environ.get('PORT', ''),
+	)
+
+
+if __name__ == "__main__":
+    main()
+
+"""@app.post("/")
 def about():
     return "RuDialoGPT Service"
+"""
 
-
-@app.post("/gpt/")
+"""@app.post("/gpt/")
 async def get_responses(payload: dict = Body(...)):
     inputs = payload.get('inputs', '')
     params = payload.get('params', {})
@@ -153,4 +203,5 @@ if __name__ == '__main__':
     # gpt = GPT(path_model='../../../Models/RuDialoGPT')
     gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
     #gpt = GPT(path_model='microsoft/DialoGPT-large')
-    uvicorn.run(app, host='127.0.0.1', port=8083)
+    uvicorn.run(app, host='192.168.1.23', port=8083)
+"""
