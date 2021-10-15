@@ -28,6 +28,7 @@ params_default = {
 
 huggingface_models = [
     'Grossmend/rudialogpt3_medium_based_on_gpt2',
+    #'microsoft/DialoGPT-large',
 ]
 
 
@@ -151,4 +152,5 @@ async def get_responses(payload: dict = Body(...)):
 if __name__ == '__main__':
     # gpt = GPT(path_model='../../../Models/RuDialoGPT')
     gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
-    uvicorn.run(app, host='127.0.0.1', port=8010)
+    #gpt = GPT(path_model='microsoft/DialoGPT-large')
+    uvicorn.run(app, host='127.0.0.1', port=8083)
