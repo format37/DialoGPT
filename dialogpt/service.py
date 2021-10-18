@@ -5,34 +5,32 @@ import os
 from typing import Dict
 from aiohttp import web
 import json
+from requests.models import Response
 
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
 )
 
-# app = FastAPI()
-async def call_test(request):
-	content = "ok"
-	return web.Response(text=content,content_type="text/html")
-
+"""
 params_default = {
-    'max_length': 256,
-    'no_repeat_ngram_size': 3,
-    'do_sample': True,
-    'top_k': 100,
-    'top_p': 0.9,
-    'temperature': 0.6,
-    'num_return_sequences': 3,
-    'device': 'cpu',
-    'is_always_use_length': True,
-    'length_generate': '1',
-}
+        'max_length': 256,
+        'no_repeat_ngram_size': 3,
+        'do_sample': True,
+        'top_k': 100,
+        'top_p': 0.9,
+        'temperature': 0.6,
+        'num_return_sequences': 3,
+        #'device': 'cpu',
+        'device': 'gpu',
+        'is_always_use_length': True,
+        'length_generate': '1',
+    }
 
 
 huggingface_models = [
-    'Grossmend/rudialogpt3_medium_based_on_gpt2',
-    #'microsoft/DialoGPT-large',
+    #'Grossmend/rudialogpt3_medium_based_on_gpt2',
+    'microsoft/DialoGPT-large',
 ]
 
 class GPT:
@@ -46,8 +44,7 @@ class GPT:
 
     def _load_model(self):
         print(f"===> Load model: {self.path_model} ...")
-        self.tokenizer = AutoTokenizer.from_pretrained(self.path_model)
-        self.model = AutoModelForCausalLM.from_pretrained(self.path_model)
+        
 
     def _check_is_enough(self):
 
@@ -112,67 +109,130 @@ class GPT:
 
         inputs_token_ids = self.tokenizer.encode(inputs_text, return_tensors='pt')
 
-        try:
-            # ToDo make this asynchronous
-            outputs_token_ids = self.model.generate(
-                inputs_token_ids,
-                max_length=params_['max_length'],
-                no_repeat_ngram_size=params_['no_repeat_ngram_size'],
-                do_sample=params_['do_sample'],
-                top_k=params_['top_k'],
-                top_p=params_['top_p'],
-                temperature=params_['temperature'],
-                num_return_sequences=params_['num_return_sequences'],
-                device=params_['device'],
-                mask_token_id=self.tokenizer.mask_token_id,
-                eos_token_id=self.tokenizer.eos_token_id,
-                unk_token_id=self.tokenizer.unk_token_id,
-                pad_token_id=self.tokenizer.pad_token_id,
-            )
-        except Exception as e:
-            print(f"===> Error generate: {str(e)}")
-            return {'inputs': '', 'outputs': '', 'status': False, 'msg': f"{str(e)}"}
+        # ToDo make this asynchronous
+        outputs_token_ids = self.model.generate(
+            inputs_token_ids,
+            max_length=params_['max_length'],
+            no_repeat_ngram_size=params_['no_repeat_ngram_size'],
+            do_sample=params_['do_sample'],
+            top_k=params_['top_k'],
+            top_p=params_['top_p'],
+            temperature=params_['temperature'],
+            num_return_sequences=params_['num_return_sequences'],
+            device=params_['device'],
+            mask_token_id=self.tokenizer.mask_token_id,
+            eos_token_id=self.tokenizer.eos_token_id,
+            unk_token_id=self.tokenizer.unk_token_id,
+            pad_token_id=self.tokenizer.pad_token_id,
+        )
 
         outputs = [self.tokenizer.decode(x, skip_special_tokens=True) for x in outputs_token_ids]
         outputs = [x.split('|')[-1] for x in outputs]
 
         return {'inputs': inputs, 'outputs': outputs, 'status': True, 'msg': ''}
 
+"""
+# app = FastAPI()
+async def call_test(request):
+	content = "ok"
+	return web.Response(text=content,content_type="text/html")
+
+
 async def call_gpt(request):
 
-    in_text = str(await request.text()).replace('\ufeff', '')
-    print(in_text)
+    inputs_text = str(await request.text()).replace('\ufeff', '')
 
-    #inputs = payload.get('inputs', '')
-    #params = payload.get('params', {})
-    params = {
+    path_model = 'microsoft/DialoGPT-large'
+    tokenizer = AutoTokenizer.from_pretrained(path_model)
+
+    params_ = {
         'max_length': 256,
         'no_repeat_ngram_size': 3,
         'do_sample': True,
         'top_k': 100,
         'top_p': 0.9,
         'temperature': 0.6,
-        'num_return_sequences': 5,
-        'device': 0,
+        'num_return_sequences': 3,
+        'device': 'cpu',
+        #'device': 'gpu',
         'is_always_use_length': True,
-        'length_generate': '1',
+        'length_generate': '10',
     }
 
     inputs = [
+        {'speaker': 0, 'text': 'Hello, how are you?'},
+        {'speaker': 1, 'text': 'Fine. And you?'},
+        {'speaker': 0, 'text': 'Fine too. What film could i choose for waching?'},
+    ]
+
+    inputs_text = ''
+    for input_ in inputs:
+        if params_['is_always_use_length']:
+            length_rep = len(tokenizer.encode(input_['text']))
+            if length_rep <= 15:
+                length_param = '1'
+            elif length_rep <= 50:
+                length_param = '2'
+            elif length_rep <= 256:
+                length_param = '3'
+            else:
+                length_param = '-'
+        else:
+            length_param = '-'
+        inputs_text += f"|{input_['speaker']}|{length_param}|{input_['text']}"
+    inputs_text += f"|1|{params_['length_generate']}|"
+        
+    
+    model = AutoModelForCausalLM.from_pretrained(path_model)
+    inputs_token_ids = tokenizer.encode(inputs_text, return_tensors='pt')
+    
+    # ToDo make this asynchronous
+    outputs_token_ids = model.generate(
+        inputs_token_ids,
+        max_length=params_['max_length'],
+        no_repeat_ngram_size=params_['no_repeat_ngram_size'],
+        do_sample=params_['do_sample'],
+        top_k=params_['top_k'],
+        top_p=params_['top_p'],
+        temperature=params_['temperature'],
+        num_return_sequences=params_['num_return_sequences'],
+        device=params_['device'],
+        mask_token_id=tokenizer.mask_token_id,
+        eos_token_id=tokenizer.eos_token_id,
+        unk_token_id=tokenizer.unk_token_id,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+    outputs = [tokenizer.decode(x, skip_special_tokens=True) for x in outputs_token_ids]
+    outputs = [x.split('|')[-1] for x in outputs]
+
+    """inputs = [
         {'speaker': 0, 'text': 'Привет, как день прошел?'},
         {'speaker': 1, 'text': 'Хорошо, а у тебя как?'},
         {'speaker': 0, 'text': 'Нормально, посоветуй фильм посмотреть'},
-    ]
+    ]"""
 
+    """inputs = [
+        {'speaker': 0, 'text': 'Hello, how are you?'},
+        #{'speaker': 1, 'text': 'Fine. And you?'},
+        #{'speaker': 0, 'text': 'Fine too. What film could i choose for waching?'},
+    ]
+    """
     # gpt = GPT(path_model='../../../Models/RuDialoGPT')
-    gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
+    
     #gpt = GPT(path_model='microsoft/DialoGPT-large')
-    response = json.dumps(await gpt.get_responses(inputs=inputs, params=params))
+    #inputs = payload.get('inputs', '')
+    #params = payload.get('params', {})
+    #response = await gpt.get_responses(inputs=inputs, params=params)
+    #response = json.dumps(await gpt.get_responses(inputs=inputs, params=params))
+    #response = 'put ok'
+    response = str(outputs)
+    print(response)
 
     return web.Response(text=response,content_type="text/html")
 
 
 def main():
+
 	app = web.Application(client_max_size=1024**3)
 	app.router.add_route('GET', '/test', call_test)
 	app.router.add_post('/gpt', call_gpt)
@@ -183,25 +243,8 @@ def main():
 	)
 
 
+#gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
+#gpt = GPT(path_model='microsoft/DialoGPT-large')
+
 if __name__ == "__main__":
     main()
-
-"""@app.post("/")
-def about():
-    return "RuDialoGPT Service"
-"""
-
-"""@app.post("/gpt/")
-async def get_responses(payload: dict = Body(...)):
-    inputs = payload.get('inputs', '')
-    params = payload.get('params', {})
-    responses = await gpt.get_responses(inputs=inputs, params=params)
-    return responses
-
-
-if __name__ == '__main__':
-    # gpt = GPT(path_model='../../../Models/RuDialoGPT')
-    gpt = GPT(path_model='Grossmend/rudialogpt3_medium_based_on_gpt2')
-    #gpt = GPT(path_model='microsoft/DialoGPT-large')
-    uvicorn.run(app, host='192.168.1.23', port=8083)
-"""

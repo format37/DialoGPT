@@ -2,9 +2,6 @@
 FROM nvidia/cuda:11.4.2-devel-ubuntu20.04
 #WORKDIR /server
 
-COPY requirements.txt /
-COPY service.py /
-
 # install miniconda
 ENV PATH="/root/miniconda3/bin:${PATH}"
 ARG PATH="/root/miniconda3/bin:${PATH}"
@@ -23,4 +20,18 @@ ADD environment.yml environment.yml
 
 RUN conda env create -f environment.yml
 ENV PATH /opt/conda/envs/rudialogpt/bin:$PATH
-RUN /bin/bash -c "source activate rudialogpt;pip3 install -r requirements.txt --no-cache-dir;python service.py"
+
+EXPOSE 8083
+
+#COPY requirements.txt /
+#RUN pip install -r requirements.txt
+COPY service.py /
+
+#RUN /bin/bash -c "source activate rudialogpt;pip3 install -r requirements.txt --no-cache-dir;python service.py"
+#RUN /bin/bash -c "source activate rudialogpt;python service.py"
+# Make RUN commands use the new environment:
+SHELL ["conda", "run", "--no-capture-output", "-n", "rudialogpt", "/bin/bash", "-c"]
+
+EXPOSE 5003
+# The code to run when container is started:
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "rudialogpt", "python3", "service.py"]
