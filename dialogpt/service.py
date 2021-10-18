@@ -2,10 +2,11 @@
 import os
 # import uvicorn
 # from fastapi import FastAPI, Body
-from typing import Dict
+#from typing import Dict
 from aiohttp import web
-import json
-from requests.models import Response
+#import json
+#from requests.models import Response
+
 
 from transformers import (
     AutoTokenizer,
