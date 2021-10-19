@@ -14,7 +14,7 @@ sh compose.sh
 ```
 Wait for gpd model loaded. It will, when [http://localhost:8083/test](http://localhost:8083/test) returns: ok
 #### talk with bot
-Connect microphone and run:
+Connect microphone and in another terminal run:
 ```
 python3 talk.py
 ```
