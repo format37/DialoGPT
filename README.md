@@ -12,7 +12,7 @@ sudo apt install espeak
 ```
 sh compose.sh
 ```
-Wait for gpd model loaded. It will, when (http://localhost:8083/test)[http://localhost:8083/test] returns: ok
+Wait for gpd model loaded. It will, when [http://localhost:8083/test](http://localhost:8083/test) returns: ok
 #### talk with bot
 Connect microphone and run:
 ```
