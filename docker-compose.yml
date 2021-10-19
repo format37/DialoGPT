@@ -6,11 +6,15 @@ services:
     ports:
       - 8083:8083
     environment:
+      - MODEL=microsoft/DialoGPT-large
+      #- MODEL=Grossmend/rudialogpt3_medium_based_on_gpt2
+      #- DEVICE=gpu
+      #- DEVICE=cpu
       - PORT=8083
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            device_ids: ['0']
-            capabilities: [gpu]
+    #deploy:
+    #  resources:
+    #    reservations:
+    #      devices:
+    #      - driver: nvidia
+    #        device_ids: ['0']
+    #        capabilities: [gpu]
