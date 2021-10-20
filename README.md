@@ -13,9 +13,9 @@ python3 -m pip install -r requirements.txt
 ```
 sh compose.sh
 ```
-Wait for gpd model loaded. It will, when [http://localhost:8083/test](http://localhost:8083/test) returns: ok
 #### talk with bot
 Connect microphone and in another terminal run:
 ```
 python3 talk.py
 ```
+When message 'say something' appears, say something, and listen for the answer.
