@@ -7,7 +7,7 @@ Listen microphone and answer gpt generated text
 git clone https://github.com/format37/DialoGPT.git
 cd DialoGPT
 sudo apt install espeak
-python3 -m pip install -r requirements.txt
+# python3 -m pip install -r requirements.txt
 ```
 #### Run dialogpt docker service:   
 ```
