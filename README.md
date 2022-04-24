@@ -8,6 +8,7 @@ git clone https://github.com/format37/DialoGPT.git
 cd DialoGPT
 sudo apt install espeak
 python3 -m pip install -r requirements.txt
+conda install -c anaconda pyaudio
 ```
 #### Run dialogpt docker service:   
 ```
