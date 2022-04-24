@@ -2,6 +2,7 @@
 Listen microphone and answer gpt generated text
 #### requirements
 - [Docker](https://docs.docker.com/engine/install/ubuntu/)
+- [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)
 #### installation
 ```
 git clone https://github.com/format37/DialoGPT.git
